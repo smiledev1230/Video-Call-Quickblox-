@@ -17,9 +17,30 @@ export class PercentagePage {
   public modal: any;
   private SESSION_TOKEN: any;
   private isLogged: boolean = false;
-  // private appUserId: any = '1';  // user 1
-  private appUserId: any = '2';     // user 2
-  // QB server configuration
+  // private appUserId: any = '1';
+  private appUserId: any = '2';
+  public user: any = {
+    qb: 48261350, 
+    qbinfo : {
+        created_at: "2018-04-24T09:31:49Z",
+        id: 48261350,
+        last_request_at: "2018-04-24T09:47:27Z",
+        login: '1',
+        owner_id: 95277,
+        updated_at: "2018-04-24T09:47:27Z"        
+    }
+  }
+  // public user: any = {
+  //   qb: 48276578, 
+  //   qbinfo : {
+  //       created_at: "2018-04-24T09:31:49Z",
+  //       id: 48276578,
+  //       last_request_at: "2018-04-24T09:47:27Z",
+  //       login: '2',
+  //       owner_id: 95277,
+  //       updated_at: "2018-04-24T09:47:27Z"        
+  //   }
+  // }  
   public CONFIG = {
       chatProtocol: {
         active: 2 // set 1 to use BOSH, set 2 to use WebSockets (default)
@@ -71,7 +92,6 @@ export class PercentagePage {
     public toastCtrl: ToastController
   ) 
   {
-    // App Credentials in QB. https://admin.quickblox.com/apps/new
     var CREDENTIALS = {
       appId: 70298,
       authKey: 'sCFz8fZMrbyJks9',
@@ -81,9 +101,22 @@ export class PercentagePage {
     
     setTimeout(() => {
       this.plt.ready().then(() => {
+       
+        // const options: CameraOptions = {
+        //   quality: 100,
+        //   destinationType: this.camera.DestinationType.DATA_URL,
+        //   encodingType: this.camera.EncodingType.JPEG,
+        //   mediaType: this.camera.MediaType.PICTURE
+        // } 
+
+        // this.camera.getPicture(options).then((imageData) => {
+        //  let base64Image = 'data:image/jpeg;base64,' + imageData;
+        // }, (err) => {
+        //  // Handle error
+        // });
+
         if (QB) {
-          QB.init(CREDENTIALS.appId, CREDENTIALS.authKey, CREDENTIALS.authSecret, this.CONFIG);
-          this.handleQBWebRtc();
+          QB.init(CREDENTIALS.appId, CREDENTIALS.authKey, CREDENTIALS.authSecret, this.CONFIG);       
           this.loginQuickblox();
         }
         // if (this.plt.is('ios')) {
@@ -127,6 +160,12 @@ export class PercentagePage {
 
   goCall(id, type, answer=false) {
       console.log("XXX=====goCall");
+      if (!this.plt.is('ios')) {
+        if (answer && (this.dataProvider.videoCallSession == null || !this.dataProvider.videoCallSession)) {
+          return;
+        }
+      } 
+
       this.goVideoCall(id, answer);
   }
 
@@ -178,6 +217,45 @@ export class PercentagePage {
 
   ionViewDidLoad() {
     console.log('ionViewDidLoad PercentagePage');    
+    if (this.plt.is('ios')) {
+      let tt = this;
+      var callback = function(jsonData) { 
+
+        cordova.plugins.barcodeScanner
+        .handleCallQB(handleQB)
+        .handleEndCallQB(handleEndCallQB)
+        .handleAcceptCallQB(handleAcceptCallQB)
+        .endInit();
+      };
+
+      setTimeout(() => {
+        cordova.plugins.barcodeScanner.loginQB(callback, { userId: this.appUserId });
+      }, 2000);
+
+      var handleEndCallQB = function(extension) { 
+        if (tt.modal) {
+          tt.modal.dismiss().catch();
+        }
+      }
+      var handleAcceptCallQB = function(extension) { 
+        if (tt.modal) {
+          tt.modal.dismiss().catch();
+        }
+      }
+      var handleQB = function(extension) { 
+        if (extension.type == 'video') {
+          tt.modal = tt.modalCtrl.create(AcceptPage, { name: extension.name , type: 'video', photo: extension.img }, {cssClass:"my-modal"});
+          tt.modal.onDidDismiss(data => {
+            if (data == '1') {
+              tt.events.publish("change:tab", 'call-video', extension.login);
+            } else if (data == '0') {           
+              cordova.plugins.barcodeScanner.endCallQB();
+            }
+          });
+          tt.modal.present();
+        }
+      };
+    }
   }
 
   loginQuickblox() {
@@ -244,17 +322,14 @@ export class PercentagePage {
   }
 
   goVideoCall(userId, answer = false, initCall = false) {    
-    // let ans = "0";
-    // if (answer) ans = "1";
-    // if (this.plt.is('ios')) {  
-    //     let user = {
-    //       qb: 48261350,
-    //       name: 'simon'  
-    //     }
-    //     cordova.plugins.barcodeScanner.videoCallQB({userId: user.qb, login: userId, name: user.name, answer: ans});  
-    // } else {
+    let ans = "0";
+    if (answer) ans = "1";
+    if (this.plt.is('ios')) {       
+
+        cordova.plugins.barcodeScanner.videoCallQB({userId: this.user.qb, login: this.appUserId, name: 'this.curuser.name', img: 'this.curuser.img', name1: 'user.name', img1: 'user.img', answer: ans, type: 'video'});
+    } else {
       this.app.getRootNav().push(HomePage, { userId: userId, type: 'video', answer: answer, initCall: initCall  });
-    // }
+    }
   }
 
   connectChatServer() {
@@ -288,7 +363,9 @@ export class PercentagePage {
 				if (users) {
           this.dataProvider.userList = users.items;       
 				}
-			});			
+      });	
+      
+      this.handleQBWebRtc();
 		}
   }
 
@@ -301,7 +378,8 @@ export class PercentagePage {
               if (data == '1') {
                 this.events.publish("change:tab", 'call-video', this.dataProvider.conversation.key);
               } else if (data == '0') {
-               
+                // this.dataProvider.updateCallType(this.appUserId, conversation.$key, 'ignore');
+                // this.dataProvider.updateCallType(conversation.$key, this.appUserId, 'ignore');
               }
             });
             modal.present();
@@ -317,28 +395,53 @@ export class PercentagePage {
     if (this.plt.is('ios')) {
 
     } else {
-      this.dataProvider.pageState = 'calling'
-
-      this.dataProvider.videoCallSession.getUserMedia(this.dataProvider.mediaParams, (err, stream) => {
-        console.log(this.dataProvider.mediaParams, err, stream);
-        this.dataProvider.callingStatus = false
-        if (err) {
-        } else {
-          setTimeout(() => {
-            if (this.dataProvider.videoCallSession.callType == QB.webrtc.CallType.VIDEO) {
-              // Attach stream on the page
-              this.dataProvider.videoCallSession.attachMediaStream('localVideo', stream);
-            }
-            // Accept a call
-            this.dataProvider.videoCallSession.accept({});
-          }, 1500);
+      setTimeout(() => {
+        this.dataProvider.pageState = 'calling'
+        let mediaParams = {
+          audio: true,
+          video: true,
+          options: {
+              muted: true,
+              mirror: true
+          }, 
+          elemId : 'localVideo'
         }
-      });
+        if (this.plt.is('ios') || this.plt.is('android')) {
+          let videotokPermission = [this.diagnostic.permission.RECORD_AUDIO]
+          videotokPermission.push(this.diagnostic.permission.CAMERA);
+          
+          this.checkPermission( videotokPermission ).then( permission => {
+            if ( permission ) {
+              this.dataProvider.videoCallSession.getUserMedia(mediaParams, (err, stream) => {
+                console.log(this.dataProvider.mediaParams, err, stream);
+                this.dataProvider.callingStatus = false
+                if (err) {
+                } else {
+                  // if (this.dataProvider.videoCallSession.callType == QB.webrtc.CallType.VIDEO) {
+                  //   this.dataProvider.videoCallSession.attachMediaStream('localVideo', stream);
+                  // }
+                  this.dataProvider.videoCallSession.accept({});
+                }
+              });
+            }
+          })
+        } else {
+          this.dataProvider.videoCallSession.getUserMedia(mediaParams, (err, stream) => {
+            console.log(this.dataProvider.mediaParams, err, stream);
+            this.dataProvider.callingStatus = false
+            if (err) {
+            } else {
+              this.dataProvider.videoCallSession.accept({});
+            }
+          });
+        }
+        
+      }, 2000);
     }
   }
 
   handleQBWebRtc() {
-    // get an incoming call request 
+   
     QB.webrtc.onCallListener = (session, extension) => {
       console.log("=====XXX===onCallListener", session, extension);
       this.dataProvider.videoCallSession = session
@@ -377,7 +480,7 @@ export class PercentagePage {
       });
       this.modal.present();   
     }
-    // If the opponent is offline at the moment
+
     QB.webrtc.onUserNotAnswerListener = (session, userId) => {
       console.log("XXX===onUserNotAnswerListener");
       this.dataProvider.callingStatus = false
@@ -385,13 +488,12 @@ export class PercentagePage {
       this.events.publish("call:end");
     };
 
-    // the opponent will get a confirmation 
     QB.webrtc.onAcceptCallListener = (session, userId, extension) => {
       console.log("XXX===onAcceptCallListener");
       this.dataProvider.callingStatus = false;
       this.events.publish("call:connected");
     };
-    // the opponent will get a reject signal 
+
     QB.webrtc.onRejectCallListener = (session, userId, extension) => {
       this.toastCtrl.create({
         message: 'Call is busy...',
@@ -405,7 +507,7 @@ export class PercentagePage {
         this.modal.dismiss().catch();
       }
     };
-    // opponent will get a stop signal
+
     QB.webrtc.onStopCallListener = (session, userId, extension) => {
       console.log("XXX===onStopCallListener");
       this.dataProvider.callingStatus = false
@@ -425,7 +527,7 @@ export class PercentagePage {
         this.modal.dismiss().catch();
       }
     };
-    // will get also remote media stream from the opponent
+
     QB.webrtc.onRemoteStreamListener = (session, userID, remoteStream) => {
       this.dataProvider.callingStatus = false
       // attach the remote stream to DOM element
@@ -463,7 +565,7 @@ export class PercentagePage {
         }
 
       } else if (connectionState == QB.webrtc.SessionConnectionState.CONNECTED) {
-
+        console.log("=================XXX======== session connected");
       }
     }
   }

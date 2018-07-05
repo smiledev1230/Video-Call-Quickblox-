@@ -15,12 +15,10 @@ export class HomePage {
     public devices: any = [];
     public currentDevice = 0;
     public curuser: any = {
-        // userId: 48261350,    // user 1
-        userId: 48276578,       // user 2
+        // userId: 48261350,
+        userId: 48276578,      
     };
-// ======= quickblox ==============
 
-    // user 1
     public user: any = {
         qb: 48261350, 
         qbinfo : {
@@ -32,8 +30,6 @@ export class HomePage {
             updated_at: "2018-04-24T09:47:27Z"        
         }
     }
-
-    // user 2    
     // public user: any = {
     //     qb: 48276578, 
     //     qbinfo : {
@@ -45,48 +41,12 @@ export class HomePage {
     //         updated_at: "2018-04-24T09:47:27Z"        
     //     }
     // }    
-
-    public CONFIG = {
-        chatProtocol: {
-          active: 2 // set 1 to use BOSH, set 2 to use WebSockets (default)
-        },
-        on: {
-          sessionExpired: (value) => {
-            console.log("sessionExpired", value())
-          }
-        },
-        webrtc: {
-          answerTimeInterval: 60, // Max answer time after that the 'QB.webrtc.onUserNotAnswerListener' callback will be fired.
-          dialingTimeInterval: 5,  // The interval between call requests produced by session.call(extension)
-          disconnectTimeInterval: 60, // If an opponent lost a connection then after this time the caller will now about it via 'QB.webrtc.onSessionConnectionStateChangedListener' callback.
-          statsReportTimeInterval: true, // Allows access to the statistical information about a peer connection. You can set amount of seconds you can get statistic information after.
-          iceServers: [
-            {
-              'url': 'stun:stun.l.google.com:19302'
-            },
-            {
-              'url': 'stun:turn.quickblox.com',
-              'username': 'quickblox',
-              'credential': 'baccb97ba2d92d71e26eb9886da5f1e0'
-            },
-            {
-              'url': 'turn:turn.quickblox.com:3478?transport=udp',
-              'username': 'quickblox',
-              'credential': 'baccb97ba2d92d71e26eb9886da5f1e0'
-            },
-            {
-              'url': 'turn:turn.quickblox.com:3478?transport=tcp',
-              'username': 'quickblox',
-              'credential': 'baccb97ba2d92d71e26eb9886da5f1e0'
-            }]
-        },
-        debug: { mode: 1 } // set DEBUG mode
-    };
-
+    
     public curUserName = "";
     private conversationId: any = '1';
     private appUserId: any;
     private timer: any;
+    private timer1: any;
     private time: any;
     private isAnswer = false;
     private occupantDetails: any;
@@ -141,11 +101,12 @@ export class HomePage {
         this.initCall();
         this.start();
     }
- // ============ quickblox ===================
-    startConference(type, item){
 
-        // this.platform.is('ios') ||  
-        if (this.platform.is('android')) {
+    startConference(type, item){
+		// this.occupantDetails = item.user;
+        // this.occupantDetails.full_name;
+         
+        if ( this.platform.is('ios') || this.platform.is('android')) {
             let videotokPermission = [this.diagnostic.permission.RECORD_AUDIO]
             if (type != 'audio') {
             	videotokPermission.push(this.diagnostic.permission.CAMERA)
@@ -226,11 +187,21 @@ export class HomePage {
 		}		
       
         let mediaParams;
-        mediaParams = this.dataProvider.mediaParams;
+        if (1 || !isAudio) {
+            mediaParams = {
+                audio: true,
+                video: true,
+                options: {
+                    muted: true,
+                    mirror: true
+                }, 
+                elemId : 'localVideo'
+            }
+        } else {
+            mediaParams = this.dataProvider.mediaParams;
+        }
 
-        var callerID = this.curuser.userId; // Your user ID (optional, will be defined from chat connection)
-        this.dataProvider.videoCallSession = QB.webrtc.createNewSession(calleesIds, sessionType, callerID);
-        // Access local media stream
+		this.dataProvider.videoCallSession = QB.webrtc.createNewSession(calleesIds, sessionType);
 		this.dataProvider.videoCallSession.getUserMedia(this.dataProvider.mediaParams, (err, stream) => {
 			console.log("ChatMultimediaPage::getUserMedia", err, stream);
             this.mediaStream = stream;
@@ -241,22 +212,33 @@ export class HomePage {
                 this.endCall();
                 this.back();
 			} else {				
-				if (!isAudio) {
-					this.dataProvider.videoCallSession.attachMediaStream('localVideo', stream);
-				}
-				// this.getoccupantDetails(''+this.dataProvider.userData.user.user_id).then( (userDetails:any)=>{               
-					this.dataProvider.pageState = 'calling'
+                this.occupantDetails['name'] = this.curuser.name;
+                this.occupantDetails['img'] = this.curuser.img;
+                this.dataProvider.pageState = 'calling'
 
-                    this.dataProvider.callingStatus = true;
-                    // Make a call
-					this.dataProvider.videoCallSession.call(this.occupantDetails, (error) =>{
-						if (error) {
-							this.dataProvider.callingStatus = false
-							this.dataProvider.onVideCall = false
-							this.dataProvider.onAudioCall = false
-						}
-					});
-				// })				
+                this.dataProvider.callingStatus = true
+                this.dataProvider.videoCallSession.call(this.occupantDetails, (error) =>{
+                    if (error) {
+                        this.dataProvider.callingStatus = false
+                        this.dataProvider.onVideCall = false
+                        this.dataProvider.onAudioCall = false
+                    }
+                });
+
+                var params = {
+                    notification_type: 'push',
+                    push_type: 'apns_voip',
+                    user: {ids: calleesIds}, // recipients.
+                    environment: 'development', // environment, can be 'production' as well.
+                    message: QB.pushnotifications.base64Encode('MPC calling...')
+                };
+                QB.pushnotifications.events.create(params, function(err, response) {
+                    if (err) {
+                        console.log(err);
+                    } else {
+                        // success
+                    }
+                });			
 			}
 		});		
     }
@@ -272,6 +254,16 @@ export class HomePage {
             this.time++;
             this.showDuration();
         }, 1000);
+
+        // setTimeout(() => {
+        //     if (this.platform.is('ios') || this.platform.is('android')) {
+        //         if (this.type == 'audio') {
+        //             AudioToggle.setAudioMode(AudioToggle.EARPIECE);
+        //         } else {
+        //             AudioToggle.setAudioMode(AudioToggle.SPEAKER);
+        //         }
+        //     }
+        // }, 2000);
     }
 
     showDuration() {
@@ -290,7 +282,7 @@ export class HomePage {
         if (num * 1 < 10) return "0" + num;
         return num;
     }
-    // End a call
+
     stopVideo(){
         if(this.dataProvider.videoCallSession) {
             this.dataProvider.videoCallSession.stop({recall: "0"})
@@ -301,11 +293,13 @@ export class HomePage {
     endCall() {
         this.stopVideo();
         if (!this.dataProvider.reCall) {
-       
+            // this.dataProvider.updateCallType(this.appUserId, this.userId, 'end'+this.typeEnd);
+            // this.dataProvider.updateCallType(this.userId, this.appUserId, 'end'+this.typeEnd);
         }
     }
 
-    ignore() {    
+    ignore() {
+        // this.dataProvider.updateCallType(this.appUserId, this.userId, 'ignore'+this.typeEnd);
       
         clearTimeout(this.timer);
         try {
@@ -347,7 +341,7 @@ export class HomePage {
             this.startConference(this.type, this.qbinfo);
             this.saveCall();
         } else {
-            setTimeout(() => {
+            this.timer1 = setTimeout(() => {
                 this.checkQbInit();
             }, 500)
         }
@@ -369,22 +363,28 @@ export class HomePage {
             users.push(this.appUserId);
             users.push(this.userId);
         }
+        // this.dataProvider.updateCallType(this.appUserId, this.userId, 'wait'+this.typeEnd);
+        // this.dataProvider.updateCallType(this.userId, this.appUserId, 'call'+this.typeEnd);
     }
 
     ngOnDestroy() { 
         console.log("ngOnDestroy --- calling page");
         
         this.events.unsubscribe("call:end", null);
+        this.events.unsubscribe("call:connected", null);
+
+        // this.dataProvider.updateCallType(this.appUserId, this.userId, 'end'+this.typeEnd);
+        // this.dataProvider.updateCallType(this.userId, this.appUserId, 'end'+this.typeEnd);
     }
 
     // Update conversation on database.
     updateConversation(saveMessage) {
-    
-        var unreadCount = 0;
+      
     }
 
     back() {
         clearTimeout(this.timer);
+        clearTimeout(this.timer1);
         try {
             // this.navCtrl.pop();
             this.navCtrl.popToRoot();
@@ -411,8 +411,7 @@ export class HomePage {
         });
     }  
 
-    reverseCamera() {      
-       
+    reverseCamera() {             
         if (!this.platform.is('android')) {
             return;
         }

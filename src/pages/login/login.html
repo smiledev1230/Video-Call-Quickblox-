@@ -1,0 +1,19 @@
+<ion-content padding>
+    <img class="logo" src={{this.logo_src}}>
+    <ion-title> 
+      <span class="title">Log into your Facebook <br> account to connect to Autherify</span>
+    </ion-title>
+    <div class="login_form">
+      <img class="login" src="assets/login.png" (click)="loginWithFacebook();">
+    </div>
+    <div class="checkbox_input">
+      <ion-row>
+        <ion-col class="checkbox_col" width-38>
+          <ion-checkbox [(ngModel)]="this.isChecked" (ionChange)="checkRemember( $event);"></ion-checkbox>
+        </ion-col>
+        <ion-col>
+          <span>Remember me</span>
+        </ion-col>
+      </ion-row>
+    </div>
+</ion-content>

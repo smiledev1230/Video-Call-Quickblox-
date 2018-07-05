@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Platform, AlertController, Events } from 'ionic-angular';
+// import { AngularFireDatabase } from 'angularfire2/database';
+// import * as firebase from 'firebase';
 import { Http, Headers } from '@angular/http';
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/do';
@@ -11,6 +13,10 @@ import { DomSanitizer } from '@angular/platform-browser';
 @Injectable()export class DataProvider {
   
   // ==============
+  public countAtOnce = 15;
+  public contactList: any;
+  public unsendMessage = {};
+  public versionNumber: any;
   public playerID = null;
   public iosStyle = "";
   public firstLoad = true;
@@ -20,7 +26,6 @@ import { DomSanitizer } from '@angular/platform-browser';
   public curuser: any;
   public pageState: any;
   public pageStateId: any;
-
   public messages: any;
   public messagesToShow: any;
   public startIndex: any;
@@ -28,7 +33,7 @@ import { DomSanitizer } from '@angular/platform-browser';
   public defaultLang = 'en'; // language
   public userLocation: any;
 
-  // QB variables for calling
+  // variables for calling
   public callType: any;
   public videoCallSession: any;
   public mediaParams = {
@@ -39,6 +44,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 			mirror: false
     }
   };
+
   public userData:any;
   public usersData:any[] = [];
   public onVideCall:boolean = false;
@@ -54,5 +60,9 @@ import { DomSanitizer } from '@angular/platform-browser';
   constructor(public platform: Platform, public http: Http, public contacts: Contacts, public alertCtrl: AlertController, public events:Events, private toastCtrl: ToastController, public splashScreen: SplashScreen, public sanitizer: DomSanitizer) {
   
     console.log("Initializing Data Provider");
+    this.contactList = [];
+    this.messages = {};
+    this.messagesToShow = {};
+    this.startIndex = {};    
   }
  }
