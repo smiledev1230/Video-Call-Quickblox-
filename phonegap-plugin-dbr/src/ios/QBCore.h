@@ -97,6 +97,7 @@ NS_ASSUME_NONNULL_BEGIN
  *  Logout and remove current user from server
  */
 - (void)logout;
+- (void)logout1;
 
 #pragma mark - Push Notifications
 /**

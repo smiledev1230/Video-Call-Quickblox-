@@ -8,12 +8,14 @@
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
+#import <CallKit/CallKit.h>
 #import <AVFoundation/AVFoundation.h>
 #import <AssetsLibrary/AssetsLibrary.h>
 #import <AudioToolbox/AudioToolbox.h>
 
 #import <Quickblox/Quickblox.h>
 #import <QuickbloxWebRTC/QuickbloxWebRTC.h>
+#import <PushKit/PushKit.h>
 #import "QBCore.h"
 #import "QBAVCallPermissions.h"
 #import "QBViewController.h"
@@ -29,6 +31,9 @@
 #import <DynamsoftBarcodeReader/DynamsoftBarcodeReader.h>
 #import <DynamsoftBarcodeReader/Barcode.h>
 
+static NSString * const kVoipEvent = @"VOIPCall";
+static const NSInteger QBDefaultMaximumCallsPerCallGroup = 1;
+static const NSInteger QBDefaultMaximumCallGroups = 1;
 //------------------------------------------------------------------------------
 // Delegate to handle orientation functions
 //------------------------------------------------------------------------------
@@ -58,7 +63,12 @@
 //@end
 
 @interface CDVBarcodeScanner()
-<QBRTCClientDelegate>
+<QBRTCClientDelegate, PKPushRegistryDelegate, CXProviderDelegate>
+@property (strong, nonatomic) CXProvider *provider;
+@property (assign, nonatomic) UIBackgroundTaskIdentifier backgroundTask;
+@property (copy, nonatomic) dispatch_block_t actionCompletionBlock;
+@property (copy, nonatomic) dispatch_block_t onAcceptActionBlock;
+@property (strong, nonatomic) CXCallController *callController;
 @end
 
 //------------------------------------------------------------------------------
@@ -147,7 +157,26 @@
 
 //------------------------- quickblox -----------------------------------------
 - (void)initQB:(CDVInvokedUrlCommand*)command {
-    const NSTimeInterval kQBAnswerTimeInterval = 60.f;
+    
+    NSString *appName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleDisplayName"];
+    CXProviderConfiguration *config = [[CXProviderConfiguration alloc] initWithLocalizedName:appName];
+    config.supportsVideo = YES;
+    config.maximumCallsPerCallGroup = QBDefaultMaximumCallsPerCallGroup;
+    config.maximumCallGroups = QBDefaultMaximumCallGroups;
+    config.supportedHandleTypes = [NSSet setWithObjects:@(CXHandleTypeGeneric), @(CXHandleTypePhoneNumber), nil];
+    config.iconTemplateImageData = UIImagePNGRepresentation([UIImage imageNamed:@"CallKitLogo"]);
+    config.ringtoneSound = @"ringtone.wav";
+    
+    self.provider = [[CXProvider alloc] initWithConfiguration:config];
+    [self.provider setDelegate:self queue:nil];
+    
+    self.callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
+    
+    _backgroundTask = UIBackgroundTaskInvalid;
+    
+    // init Quickblox
+    
+    const NSTimeInterval kQBAnswerTimeInterval = 120.f;
     const NSTimeInterval kQBDialingTimeInterval = 5.f;
     
 //    [QBSettings setAccountKey:@"7yvNe17TnjNUqDoPwfqp"];
@@ -191,6 +220,30 @@
     
     [[QBRTCClient instance] addDelegate:self];
 }
+- (void)logoutQB:(CDVInvokedUrlCommand*)command {
+    [Core logout1];
+}
+
+// --- return login info to cordova ---
+- (void)returnLoginQB:(NSString*)userId callback:(NSString*)callback{
+    self.voipRegistry = [[PKPushRegistry alloc] initWithQueue:dispatch_get_main_queue()];
+    self.voipRegistry.delegate = self;
+    self.voipRegistry.desiredPushTypes = [NSSet setWithObject:PKPushTypeVoIP];
+    
+    NSMutableDictionary* resultDict = [[[NSMutableDictionary alloc] init] autorelease];
+    [resultDict setObject:userId forKey:@"userId"];
+    
+    CDVPluginResult* result = [CDVPluginResult
+                               resultWithStatus: CDVCommandStatus_OK
+                               messageAsDictionary:resultDict
+                               ];
+    
+    [[self commandDelegate] sendPluginResult:result callbackId:callback];
+}
+
+- (void)endCallQB:(CDVInvokedUrlCommand*)command {
+    [self.session hangUp:nil];
+}
 - (void)audioCallQB:(CDVInvokedUrlCommand*)command {
     NSDictionary* options = command.arguments.count == 0 ? [NSNull null] : [command.arguments objectAtIndex:0];
     
@@ -209,49 +262,76 @@
 }
 - (void)callWithConferenceType:(QBRTCConferenceType)conferenceType userInfo:(NSDictionary*)options{
     NSString* userId = options[@"userId"];
-    NSString* login = options[@"login"];
+//    NSString* login = options[@"login"];
     NSString* answer = options[@"answer"];
-    
+    NSInteger number_userId = [userId integerValue];
+    NSNumber *myNumber = [NSNumber numberWithInteger:number_userId];
 //    NSNumberFormatter *f = [[NSNumberFormatter alloc] init];
 //    f.numberStyle = NSNumberFormatterDecimalStyle;
 //    NSNumber *myNumber = [f numberFromString:userId];
     
     NSArray <NSNumber *> *opponentsIDs;
     NSMutableArray *result = [NSMutableArray arrayWithCapacity:1];
-    [result addObject:userId];
+    [result addObject:myNumber];
     opponentsIDs = result;
     
     NSString *type = @"audio";
     if (conferenceType == QBRTCConferenceTypeVideo) {
         type = @"video";
     }
+    conferenceType = QBRTCConferenceTypeVideo;
     
     QBRTCSession *newSession = nil;
     if ([answer isEqualToString:@"0"]) {
         newSession = [[QBRTCClient instance] createNewSessionWithOpponents:opponentsIDs
                                                                   withConferenceType:conferenceType];
-        NSDictionary *userInfo = @{ @"id" : userId,
-                                    @"login": login,
-                                    @"owner_id": @"92976",
-                                    @"type":type
-                                };
+        NSDictionary *userInfo = options;
         
         self.session = newSession;
         [self.session startCall:userInfo];
     } else {
-        NSDictionary *userInfo = @{ @"acceptCall" : @"userInfo"};
+        NSDictionary *userInfo = options;
         [self.session acceptCall:userInfo];
     }
     
     QBViewController *qbView = [[QBViewController alloc] init];
-    qbView.session = newSession;
+    qbView.session = self.session;
     qbView.type = type;
     qbView.answer = answer;
-    qbView.name = options[@"name"];
+    qbView.name = options[@"name1"];
+    qbView.parent = self;
+    self.qbView = qbView;
     self.nav = [[UINavigationController alloc] initWithRootViewController:qbView];
     self.nav.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
     self.nav.navigationBarHidden = true;
     [self.viewController presentViewController:self.nav animated:NO completion:nil];
+    
+    // send voip push
+    NSDictionary *payload = @{
+                              @"message"  : [NSString stringWithFormat:@"%@ is calling...", @"MPC"],
+                              @"ios_voip" : @"1",
+                              kVoipEvent  : @"1",
+                              };
+    NSData *data =
+    [NSJSONSerialization dataWithJSONObject:payload
+                                    options:NSJSONWritingPrettyPrinted
+                                      error:nil];
+    NSString *message =
+    [[NSString alloc] initWithData:data
+                          encoding:NSUTF8StringEncoding];
+    
+    QBMEvent *event = [QBMEvent event];
+    event.notificationType = QBMNotificationTypePush;
+    event.usersIDs = [opponentsIDs componentsJoinedByString:@","];
+    event.type = QBMEventTypeOneShot;
+    event.message = message;
+    
+    [QBRequest createEvent:event
+              successBlock:^(QBResponse *response, NSArray<QBMEvent *> *events) {
+                  NSLog(@"Send voip push - Success");
+              } errorBlock:^(QBResponse * _Nonnull response) {
+                  NSLog(@"Send voip push - Error");
+              }];
 }
 - (void)acceptCallQB:(CDVInvokedUrlCommand*)command {
     NSDictionary* options = command.arguments.count == 0 ? [NSNull null] : [command.arguments objectAtIndex:0];
@@ -261,31 +341,303 @@
     }
     
 }
+- (void)setQBHandler:(CDVInvokedUrlCommand*)command {
+    self.notficationReceivedCallbackId11 = command.callbackId;
+}
+- (void)setQBHandlerEnd:(CDVInvokedUrlCommand*)command {
+    self.notficationEndReceivedCallbackId11 = command.callbackId;
+}
+- (void)setQBHandlerAccept:(CDVInvokedUrlCommand*)command {
+    self.notficationAcceptReceivedCallbackId11 = command.callbackId;
+}
+- (void)succesCallback11:(NSString *)callbackId  userInfo:(NSDictionary *)userInfo{
+//    NSMutableDictionary* data = [[[NSMutableDictionary alloc] init] autorelease];
+//    [data setObject:@"userId" forKey:@"userId"];
+    CDVPluginResult* commandResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:userInfo];
+    commandResult.keepCallback = @1;
+    [[self commandDelegate] sendPluginResult:commandResult callbackId:callbackId];
+}
 
+- (BOOL)isCallKitAvailable {
+    static BOOL callKitAvailable = NO;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+#if TARGET_IPHONE_SIMULATOR
+        callKitAvailable = NO;
+#else
+        callKitAvailable = [UIDevice currentDevice].systemVersion.integerValue >= 10;
+#endif
+    });
+    return callKitAvailable;
+}
+
+// MARK: - PKPushRegistryDelegate protocol
+
+- (void)pushRegistry:(PKPushRegistry *)registry didUpdatePushCredentials:(PKPushCredentials *)pushCredentials forType:(PKPushType)type {
+    
+    //  New way, only for updated backend
+    NSString *deviceIdentifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    
+    QBMSubscription *subscription = [QBMSubscription subscription];
+    subscription.notificationChannel = QBMNotificationChannelAPNSVOIP;
+    subscription.deviceUDID = deviceIdentifier;
+    subscription.deviceToken = [self.voipRegistry pushTokenForType:PKPushTypeVoIP];
+    
+    [QBRequest createSubscription:subscription successBlock:^(QBResponse *response, NSArray *objects) {
+        NSLog(@"Create Subscription request - Success");
+    } errorBlock:^(QBResponse *response) {
+        NSLog(@"Create Subscription request - Error");
+    }];
+}
+- (void)pushRegistry:(PKPushRegistry *)registry didReceiveIncomingPushWithPayload:(PKPushPayload *)payload forType:(PKPushType)type {
+    if ([self isCallKitAvailable]) {
+        if ([payload.dictionaryPayload objectForKey:kVoipEvent] != nil) {
+            UIApplication *application = [UIApplication sharedApplication];
+            if (application.applicationState == UIApplicationStateBackground
+                && _backgroundTask == UIBackgroundTaskInvalid) {
+                _backgroundTask = [application beginBackgroundTaskWithExpirationHandler:^{
+                    [application endBackgroundTask:_backgroundTask];
+                    _backgroundTask = UIBackgroundTaskInvalid;
+                }];
+            }
+        }
+    }
+}
+- (void)endCallWithUUID:(NSUUID *)uuid completion:(dispatch_block_t)completion {
+    if (_session == nil) {
+        return;
+    }
+    if (uuid == nil) {
+        return;
+    }
+    
+    CXEndCallAction *action = [[CXEndCallAction alloc] initWithCallUUID:uuid];
+    CXTransaction *transaction = [[CXTransaction alloc] initWithAction:action];
+    
+    dispatchOnMainThread(^{
+        [self requestTransaction:transaction completion:nil];
+    });
+    
+    if (completion != nil) {
+        _actionCompletionBlock = completion;
+    }
+}
+- (void)requestTransaction:(CXTransaction *)transaction completion:(void (^)(BOOL))completion {
+    [_callController requestTransaction:transaction completion:^(NSError *error) {
+        if (error != nil) {
+            NSLog(@"[CallKitManager] Error: %@", error);
+        }
+        if (completion != nil) {
+            completion(error == nil);
+        }
+    }];
+}
 #pragma mark -
 #pragma mark QBRTCClientDelegate
 
+- (void)sessionDidClose:(QBRTCSession *)session {
+    if (session == self.session) {
+//        UIApplication *application = [UIApplication sharedApplication];
+//        if (application.applicationState == UIApplicationStateBackground) {
+            [self endCallWithUUID:_callUUID completion:nil];
+//        }
+    }
+}
+- (void)session:(QBRTCSession *)session connectionClosedForUser:(NSNumber *)userID {
+    
+    NSLog(@"Connection is closed for user %@", userID);
+    NSMutableDictionary* userInfo = [[[NSMutableDictionary alloc] init] autorelease];
+    [userInfo setObject:userID forKey:@"userId"];
+    [self succesCallback11:self.notficationEndReceivedCallbackId11 userInfo:userInfo];
+    
+    UIApplication *application = [UIApplication sharedApplication];
+    if (application.applicationState == UIApplicationStateBackground) {
+        [self endCallWithUUID:_callUUID completion:nil];
+    }
+}
+- (void)session:(QBRTCSession *)session rejectedByUser:(NSNumber *)userID userInfo:(NSDictionary *)userInfo  {
+    NSLog(@"Rejected by user %@", userID);
+//    [self cancel];
+}
 - (void)didReceiveNewSession:(QBRTCSession *)session userInfo:(NSDictionary *)userInfo {
     
     if (self.session) {
         // we already have a video/audio call session, so we reject another one
         // userInfo - the custom user information dictionary for the call from caller. May be nil.
-        NSDictionary *userInfo = @{ @"key" : @"value" };
-        [session rejectCall:userInfo];
+//        NSDictionary *userInfo = @{ @"key" : @"value" };
+//        [session rejectCall:userInfo];
+//        return;
+    }
+    UIApplication *application = [UIApplication sharedApplication];
+    
+    self.session = session;
+    
+    if ([self.reCall isEqualToString:@"1"]) {
+        self.qbView.session = session;
+        [self.session acceptCall:userInfo];
+        [self.qbView updateVideo];
         return;
     }
-    self.session = session;
+    if (application.applicationState != UIApplicationStateBackground) {
+        [self succesCallback11:self.notficationReceivedCallbackId11 userInfo:userInfo];
+    }
+    
+    self.userInfo = userInfo;
+    
+    if (application.applicationState == UIApplicationStateBackground && ![self.reCall isEqualToString:@"1"]) {
+        self.callUUID = [NSUUID UUID];
+        NSMutableArray *opponentIDs = [@[session.initiatorID] mutableCopy];
+        for (NSNumber *userID in session.opponentsIDs) {
+            if ([userID integerValue] != [QBCore instance].currentUser.ID) {
+                [opponentIDs addObject:userID];
+            }
+        }
+        NSString *name = userInfo[@"name"];
+        NSString *type = userInfo[@"type"];
+        [self reportIncomingCallWithUserIDs:[opponentIDs copy] session:session uName:name uType:type uuid:self.callUUID onAcceptAction:^{
+            
+             [self.session acceptCall:userInfo];
+    
+             QBViewController *qbView = [[QBViewController alloc] init];
+             qbView.session = self.session;
+             qbView.type = userInfo[@"type"];
+             qbView.answer = @"1";
+             qbView.name = name;
+             self.qbView = qbView;
+             self.nav = [[UINavigationController alloc] initWithRootViewController:qbView];
+             self.nav.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+             self.nav.navigationBarHidden = true;
+             [self.viewController presentViewController:self.nav animated:NO completion:nil];
+            
+        } completion:nil];
+    }
 }
-- (void)returnLoginQB:(NSString*)userId callback:(NSString*)callback{
-    NSMutableDictionary* resultDict = [[[NSMutableDictionary alloc] init] autorelease];
-    [resultDict setObject:userId forKey:@"userId"];
+- (void)reportIncomingCallWithUserIDs:(NSArray *)userIDs session:(QBRTCSession *)session uName:(NSString *)uName uType:(NSString *)uType uuid:(NSUUID *)uuid onAcceptAction:(dispatch_block_t)onAcceptAction completion:(void (^)(BOOL))completion {
+    NSLog(@"[CallKitManager] Report incoming call %@", uuid);
+
+    _session = session;
+    _onAcceptActionBlock = onAcceptAction;
     
-    CDVPluginResult* result = [CDVPluginResult
-                               resultWithStatus: CDVCommandStatus_OK
-                               messageAsDictionary:resultDict
-                               ];
+    NSString *callerName = nil;
+    CXCallUpdate *update = [[CXCallUpdate alloc] init];
+    update.remoteHandle = [self handleForUserIDs:userIDs outCallerName:&callerName];
+    update.localizedCallerName = uName;
+    update.supportsHolding = NO;
+    update.supportsGrouping = NO;
+    update.supportsUngrouping = NO;
+    update.supportsDTMF = NO;
+    update.hasVideo = [uType isEqualToString:@"video"];
     
-    [[self commandDelegate] sendPluginResult:result callbackId:callback];
+    [_provider reportNewIncomingCallWithUUID:uuid update:update completion:^(NSError * _Nullable error) {
+        BOOL silent = ([error.domain isEqualToString:CXErrorDomainIncomingCall] && error.code == CXErrorCodeIncomingCallErrorFilteredByDoNotDisturb);
+        dispatchOnMainThread(^{
+            if (completion != nil) {
+                completion(silent);
+            }
+        });
+    }];
+}
+
+static inline void dispatchOnMainThread(dispatch_block_t block) {
+    if ([NSThread isMainThread]) {
+        block();
+    }
+    else {
+        dispatch_async(dispatch_get_main_queue(), block);
+    }
+}
+
+- (CXHandle *)handleForUserIDs:(NSArray *)userIDs outCallerName:(NSString **)outCallerName {
+    // handle user from whatever database here
+
+    return [[CXHandle alloc] initWithType:CXHandleTypeGeneric value:[userIDs componentsJoinedByString:@", "]];
+}
+
+// MARK: - CXProviderDelegate protocol
+
+- (void)providerDidReset:(CXProvider *)__unused provider {
+    NSLog(@"CXProvider - providerDidReset");
+}
+
+- (void)provider:(CXProvider *)__unused provider performStartCallAction:(CXStartCallAction *)action {
+    NSLog(@"CXProvider - performStartCallAction");
+}
+
+- (void)provider:(CXProvider *)__unused provider performAnswerCallAction:(CXAnswerCallAction *)action {
+    NSLog(@"CXProvider - performAnswerCallAction");
+    if (_session == nil) {
+        [action fail];
+        return;
+    }
+    dispatchOnMainThread(^{
+        [self.session acceptCall:self.userInfo];
+        [action fulfill];
+        
+        QBViewController *qbView = [[QBViewController alloc] init];
+        qbView.session = self.session;
+        qbView.type = self.userInfo[@"type"];
+        qbView.answer = @"1";
+        qbView.name = self.userInfo[@"name1"];
+        self.qbView = qbView;
+        self.nav = [[UINavigationController alloc] initWithRootViewController:qbView];
+        self.nav.modalTransitionStyle = UIModalTransitionStyleCrossDissolve;
+        self.nav.navigationBarHidden = true;
+        [self.viewController presentViewController:self.nav animated:NO completion:nil];
+        
+        [self succesCallback11:self.notficationAcceptReceivedCallbackId11 userInfo:self.userInfo];
+
+//        if (_onAcceptActionBlock != nil) {
+//            _onAcceptActionBlock();
+//            _onAcceptActionBlock = nil;
+//        }
+    });
+}
+
+- (void)provider:(CXProvider *)__unused provider performEndCallAction:(CXEndCallAction *)action {
+    NSLog(@"CXProvider - EndCallAction");
+    if (_session == nil) {
+        [action fail];
+        return;
+    }
+    QBRTCSession *session = _session;
+    _session = nil;
+    
+    dispatchOnMainThread(^{
+        
+        [session rejectCall:nil];
+
+        [action fulfillWithDateEnded:[NSDate date]];
+        
+        if (_actionCompletionBlock != nil) {
+            _actionCompletionBlock();
+            _actionCompletionBlock = nil;
+        }
+    });
+}
+
+- (void)provider:(CXProvider *)__unused provider performSetMutedCallAction:(CXSetMutedCallAction *)action {
+    
+}
+
+- (void)provider:(CXProvider *)__unused provider didActivateAudioSession:(AVAudioSession *)audioSession {
+    NSLog(@"[CallKitManager] Activated audio session.");
+    QBRTCAudioSession *rtcAudioSession = [QBRTCAudioSession instance];
+    [rtcAudioSession audioSessionDidActivate:audioSession];
+    // enabling audio now
+    rtcAudioSession.audioEnabled = YES;
+    // enabling local mic recording in recorder (if recorder is active) as of interruptions are over now
+    _session.recorder.localAudioEnabled = YES;
+}
+
+- (void)provider:(CXProvider *)provider didDeactivateAudioSession:(AVAudioSession *)audioSession {
+    NSLog(@"[CallKitManager] Dectivated audio session.");
+    [[QBRTCAudioSession instance] audioSessionDidDeactivate:audioSession];
+    // deinitializing audio session after iOS deactivated it for us
+    QBRTCAudioSession *session = [QBRTCAudioSession instance];
+    if (session.isInitialized) {
+        NSLog(@"Deinitializing session in CallKit callback.");
+        [session deinitialize];
+    }
 }
 
 //==========================================================================

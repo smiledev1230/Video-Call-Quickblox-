@@ -12,16 +12,164 @@
     <issue>https://github.com/phonegap/phonegap-plugin-barcodescanner/issues</issue>
 
     <engines>
-        <engine name="cordova" version=">=3.0.0" />
+        <engine name="cordova" version=">=4.0.0" />
     </engines>
 
-    <js-module src="js/barcodescanner.js" name="BarcodeScanner">
-        <clobbers target="cordova.plugins.barcodeScanner" />
-    </js-module>
+    <!-- android -->
+    <platform name="android">
+        <js-module src="js/barcodescanner-and.js" name="BarcodeScanner">
+            <clobbers target="cordova.plugins.barcodeScanner" />
+        </js-module>
 
+        <config-file target="config.xml" parent="/*">
+            <feature name="BarcodeScanner">
+                <param name="android-package" value="qb.Quickblox" />
+            </feature>
+            <feature name="Login">
+                <param name="android-package" value="qb.Login" />
+            </feature>
+        </config-file>
+
+        <config-file target="AndroidManifest.xml" parent="/*">
+            <uses-permission android:name="android.permission.CAMERA" />
+            <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+            <uses-permission android:name="android.permission.RECORD_AUDIO" />
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+            <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+        </config-file>
+        <config-file target="AndroidManifest.xml" parent="/manifest/application">
+            <activity
+                android:name="qb.activities.CallActivity"
+                android:configChanges="keyboardHidden|screenSize|orientation"
+                android:screenOrientation="portrait"
+                android:theme="@style/BaseAppTheme" />
+
+            <service android:name="qb.CallService" />
+        </config-file>
+
+        <source-file src="src/android/java/QBBase.java" target-dir="src/qb" />
+        <source-file src="src/android/java/Quickblox.java" target-dir="src/qb" />
+        <source-file src="src/android/java/CallService.java" target-dir="src/qb" />
+        <source-file src="src/android/java/Login.java" target-dir="src/qb" />
+        <source-file src="src/android/java/activities/BaseActivity.java" target-dir="src/qb/activities" />
+        <source-file src="src/android/java/activities/CallActivity.java" target-dir="src/qb/activities" />
+        <source-file src="src/android/java/activities/CoreBaseActivity.java" target-dir="src/qb/activities" />
+        <source-file src="src/android/java/activities/PermissionsActivity.java" target-dir="src/qb/activities" />
+        <source-file src="src/android/java/adapters/OpponentsFromCallAdapter.java" target-dir="src/qb/adapters" />
+        <source-file src="src/android/java/db/DbHelper.java" target-dir="src/qb/db" />
+        <source-file src="src/android/java/db/QbUsersDbManager.java" target-dir="src/qb/db" />
+        <source-file src="src/android/java/fragments/AudioConversationFragment.java" target-dir="src/qb/fragments" />
+        <source-file src="src/android/java/fragments/BaseConversationFragment.java" target-dir="src/qb/fragments" />
+        <source-file src="src/android/java/fragments/BaseToolBarFragment.java" target-dir="src/qb/fragments" />
+        <source-file src="src/android/java/fragments/ConversationFragmentCallbackListener.java" target-dir="src/qb/fragments" />
+        <source-file src="src/android/java/fragments/IncomeCallFragment.java" target-dir="src/qb/fragments" />
+        <source-file src="src/android/java/fragments/IncomeCallFragmentCallbackListener.java" target-dir="src/qb/fragments" />
+        <source-file src="src/android/java/fragments/VideoConversationFragment.java" target-dir="src/qb/fragments" />
+
+        <source-file src="src/android/java/util/ChatPingAlarmManager.java" target-dir="src/qb/util" />
+        <source-file src="src/android/java/util/QBResRequestExecutor.java" target-dir="src/qb/util" />
+        <source-file src="src/android/java/util/NetworkConnectionChecker.java" target-dir="src/qb/util" />
+        <source-file src="src/android/java/utils/Consts.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/CollectionsUtils.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/FragmentExecuotr.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/PermissionsChecker.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/PushNotificationSender.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/QBRTCSessionUtils.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/ResourceUtils.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/RingtonePlayer.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/SettingsUtil.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/SharedPrefsHelper.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/UiUtils.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/WebRtcSessionManager.java" target-dir="src/qb/utils" />
+        <source-file src="src/android/java/utils/UsersUtils.java" target-dir="src/qb/utils" />
+        
+
+        <resource-file src="src/android/res/values/qb_plugin_strings.xml" target="res/values/qb_plugin_strings.xml" />
+        <resource-file src="src/android/res/values/qb_plugin_colors.xml" target="res/values/qb_plugin_colors.xml" />
+        <resource-file src="src/android/res/values/qb_plugin_dimens.xml" target="res/values/qb_plugin_dimens.xml" />
+        <resource-file src="src/android/res/values/qb_plugin_arrays.xml" target="res/values/qb_plugin_arrays.xml" />
+        <resource-file src="src/android/res/values/styles_base.xml" target="res/values/styles_base.xml" />
+        <!-- <resource-file src="src/android/res/xml/preferences.xml" target="res/xml/preferences.xml" /> -->
+
+        <resource-file src="src/android/res/layout/activity_call.xml" target="res/layout/activity_call.xml" />
+        <resource-file src="src/android/res/layout/connection_popup.xml" target="res/layout/connection_popup.xml" />
+        <resource-file src="src/android/res/layout/fragment_video_conversation.xml" target="res/layout/fragment_video_conversation.xml" />
+        <resource-file src="src/android/res/layout/list_item_opponent_from_call.xml" target="res/layout/list_item_opponent_from_call.xml" />
+        <resource-file src="src/android/res/layout/toolbar_call.xml" target="res/layout/toolbar_call.xml" />
+        <resource-file src="src/android/res/layout/view_action_buttons_conversation_fragment.xml" target="res/layout/view_action_buttons_conversation_fragment.xml" />
+        <resource-file src="src/android/res/layout/view_outgoing_screen.xml" target="res/layout/view_outgoing_screen.xml" />
+
+        <resource-file src="src/android/res/drawable/call_cam_toggle_background.xml" target="res/drawable/call_cam_toggle_background.xml" />
+        <resource-file src="src/android/res/drawable/call_mic_toggle_background.xml" target="res/drawable/call_mic_toggle_background.xml" />
+        <resource-file src="src/android/res/drawable/call_speaker_toggle_background.xml" target="res/drawable/call_speaker_toggle_background.xml" />
+        <resource-file src="src/android/res/drawable/call_toggle_button_background.xml" target="res/drawable/call_toggle_button_background.xml" />
+        <resource-file src="src/android/res/drawable/ic_mic_off.xml" target="res/drawable/ic_mic_off.xml" />
+        <resource-file src="src/android/res/drawable/ic_user_camera_off.png" target="res/drawable/ic_user_camera_off.png" />
+        <resource-file src="src/android/res/drawable/selector_call_end.xml" target="res/drawable/selector_call_end.xml" />
+        <resource-file src="src/android/res/drawable/selector_call_take.xml" target="res/drawable/selector_call_take.xml" />
+        <resource-file src="src/android/res/drawable/selector_toggle_cam.xml" target="res/drawable/selector_toggle_cam.xml" />
+        <resource-file src="src/android/res/drawable/selector_toggle_mic.xml" target="res/drawable/selector_toggle_mic.xml" />
+        <resource-file src="src/android/res/drawable/selector_toggle_speaker.xml" target="res/drawable/selector_toggle_speaker.xml" />
+        <resource-file src="src/android/res/drawable/shape_oval_green.xml" target="res/drawable/shape_oval_green.xml" />
+        <resource-file src="src/android/res/drawable/shape_oval_red.xml" target="res/drawable/shape_oval_red.xml" />
+        <resource-file src="src/android/res/drawable/shape_oval_transparent.xml" target="res/drawable/shape_oval_transparent.xml" />
+        <resource-file src="src/android/res/drawable/shape_oval_white_green.xml" target="res/drawable/shape_oval_white_green.xml" />
+        <resource-file src="src/android/res/drawable/shape_oval_white_red.xml" target="res/drawable/shape_oval_white_red.xml" />
+        <resource-file src="src/android/res/drawable/toolbar_shadow.xml" target="res/drawable/toolbar_shadow.xml" />
+
+        <resource-file src="src/android/res/drawable-hdpi/ic_video_off_white_24dp.png" target="res/drawable-hdpi/ic_video_off_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-mdpi/ic_video_off_white_24dp.png" target="res/drawable-mdpi/ic_video_off_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xhdpi/ic_video_off_white_24dp.png" target="res/drawable-xhdpi/ic_video_off_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxhdpi/ic_video_off_white_24dp.png" target="res/drawable-xxhdpi/ic_video_off_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxxhdpi/ic_video_off_white_24dp.png" target="res/drawable-xxxhdpi/ic_video_off_white_24dp.png" />
+
+        <resource-file src="src/android/res/drawable-hdpi/ic_volume_high_white_24dp.png" target="res/drawable-hdpi/ic_volume_high_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-mdpi/ic_volume_high_white_24dp.png" target="res/drawable-mdpi/ic_volume_high_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xhdpi/ic_volume_high_white_24dp.png" target="res/drawable-xhdpi/ic_volume_high_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxhdpi/ic_volume_high_white_24dp.png" target="res/drawable-xxhdpi/ic_volume_high_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxxhdpi/ic_volume_high_white_24dp.png" target="res/drawable-xxxhdpi/ic_volume_high_white_24dp.png" />
+
+        <resource-file src="src/android/res/drawable-hdpi/ic_microphone_off_white_24dp.png" target="res/drawable-hdpi/ic_microphone_off_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-mdpi/ic_microphone_off_white_24dp.png" target="res/drawable-mdpi/ic_microphone_off_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xhdpi/ic_microphone_off_white_24dp.png" target="res/drawable-xhdpi/ic_microphone_off_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxhdpi/ic_microphone_off_white_24dp.png" target="res/drawable-xxhdpi/ic_microphone_off_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxxhdpi/ic_microphone_off_white_24dp.png" target="res/drawable-xxxhdpi/ic_microphone_off_white_24dp.png" />
+
+        <resource-file src="src/android/res/drawable-hdpi/ic_microphone_white_24dp.png" target="res/drawable-hdpi/ic_microphone_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-mdpi/ic_microphone_white_24dp.png" target="res/drawable-mdpi/ic_microphone_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xhdpi/ic_microphone_white_24dp.png" target="res/drawable-xhdpi/ic_microphone_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxhdpi/ic_microphone_white_24dp.png" target="res/drawable-xxhdpi/ic_microphone_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxxhdpi/ic_microphone_white_24dp.png" target="res/drawable-xxxhdpi/ic_microphone_white_24dp.png" />
+
+        <resource-file src="src/android/res/drawable-hdpi/ic_video_white_24dp.png" target="res/drawable-hdpi/ic_video_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-mdpi/ic_video_white_24dp.png" target="res/drawable-mdpi/ic_video_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xhdpi/ic_video_white_24dp.png" target="res/drawable-xhdpi/ic_video_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxhdpi/ic_video_white_24dp.png" target="res/drawable-xxhdpi/ic_video_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxxhdpi/ic_video_white_24dp.png" target="res/drawable-xxxhdpi/ic_video_white_24dp.png" />
+
+        
+        <resource-file src="src/android/res/drawable-hdpi/ic_volume_low_white_24dp.png" target="res/drawable-hdpi/ic_volume_low_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xhdpi/ic_volume_low_white_24dp.png" target="res/drawable-xhdpi/ic_volume_low_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxhdpi/ic_volume_low_white_24dp.png" target="res/drawable-xxhdpi/ic_volume_low_white_24dp.png" />
+        <resource-file src="src/android/res/drawable-xxxhdpi/ic_volume_low_white_24dp.png" target="res/drawable-xxxhdpi/ic_volume_low_white_24dp.png" />
+
+        
+
+        <framework src="src/android/plugin.gradle" custom="true" type="gradleReference"/>
+        <framework src="com.google.code.gson:gson:2.8.1"/>
+        <framework src="com.android.support:appcompat-v7:26.1.0"/>
+        <framework src="com.android.support:recyclerview-v7:26.1.0"/>
+
+    </platform>
+    
     <!-- ios -->
     <platform name="ios">
         <!-- Cordova >= 2.8 -->
+        <js-module src="js/barcodescanner.js" name="BarcodeScanner">
+            <clobbers target="cordova.plugins.barcodeScanner" />
+        </js-module>
+
         <config-file target="config.xml" parent="/*">
             <feature name="BarcodeScanner">
                 <param name="ios-package" value="CDVBarcodeScanner" />
@@ -39,7 +187,10 @@
         <resource-file src="src/ios/mic_mute.png" />
         <resource-file src="src/ios/mic.png" />
         <resource-file src="src/ios/video.png" />
+        <resource-file src="src/ios/video_mute.png" />
         <resource-file src="src/ios/volumn.png" />
+        <resource-file src="src/ios/speaker.png" />
+        <resource-file src="src/ios/call.png" />
 
         <header-file src="src/ios/QBCore.h" />
         <header-file src="src/ios/QBProfile.h"/>
@@ -61,6 +212,8 @@
         <framework src="CoreGraphics.framework" />
         <framework src="CoreImage.framework" />
         <framework src="AudioToolbox.framework" />
+        <framework src="PushKit.framework" />
+        <framework src="CallKit.framework" />
         <framework src="src/ios/Quickblox.framework" custom="true"/>
         <framework src="src/ios/QuickbloxWebRTC.framework" custom="true"/>
         <framework src="src/ios/DynamsoftBarcodeReader.framework" custom="true"/>

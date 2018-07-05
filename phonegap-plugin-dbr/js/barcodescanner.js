@@ -81,6 +81,10 @@ BarcodeScanner.prototype.loginQB = function (successCallback, user) {
     exec(successCallback, function () { }, 'BarcodeScanner', 'loginQB', [user]);
 };
 
+BarcodeScanner.prototype.logoutQB = function () {
+    exec(function () { }, function () { }, 'BarcodeScanner', 'logoutQB', []);
+};
+
 BarcodeScanner.prototype.audioCallQB = function (user) {
     exec(function () { }, function () { }, 'BarcodeScanner', 'audioCallQB', [user]);
 };
@@ -91,6 +95,31 @@ BarcodeScanner.prototype.videoCallQB = function (user) {
 
 BarcodeScanner.prototype.acceptCallQB = function (user) {
     exec(function () { }, function () { }, 'BarcodeScanner', 'acceptCallQB', [user]);
+};
+
+BarcodeScanner.prototype.endCallQB = function () {
+    exec(function () { }, function () { }, 'BarcodeScanner', 'endCallQB', []);
+};
+
+BarcodeScanner.prototype.handleCallQB = function(handleNotificationReceivedCallback) {
+    notificationReceivedDelegate = handleNotificationReceivedCallback;
+    return this;
+};
+
+BarcodeScanner.prototype.handleEndCallQB = function(handleNotificationEndReceivedCallback) {
+    notificationEndReceivedDelegate = handleNotificationEndReceivedCallback;
+    return this;
+};
+
+BarcodeScanner.prototype.handleAcceptCallQB = function(handleNotificationAcceptReceivedCallback) {
+    notificationAcceptReceivedDelegate = handleNotificationAcceptReceivedCallback;
+    return this;
+};
+
+BarcodeScanner.prototype.endInit = function() {
+    exec(notificationReceivedDelegate, function(){}, "BarcodeScanner", "setQBHandler", []);
+    exec(notificationEndReceivedDelegate, function(){}, "BarcodeScanner", "setQBHandlerEnd", []);
+    exec(notificationAcceptReceivedDelegate, function(){}, "BarcodeScanner", "setQBHandlerAccept", []);
 };
 
 BarcodeScanner.prototype.scan = function (successCallback, errorCallback, config) {

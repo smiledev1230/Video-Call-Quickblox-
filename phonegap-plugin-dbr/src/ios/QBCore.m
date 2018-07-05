@@ -211,6 +211,14 @@ NSString *const QB_DEFAULT_PASSOWORD = @"x6Bt0VDy5";
      }];
 }
 
+- (void)logout1 {
+    [QBRequest logOutWithSuccessBlock:^(QBResponse *response) {
+        // Successful logout
+    } errorBlock:^(QBResponse *response) {
+        // Handle error
+    }];
+}
+
 - (void)logout {
     
     dispatch_group_t logoutGroup = dispatch_group_create();

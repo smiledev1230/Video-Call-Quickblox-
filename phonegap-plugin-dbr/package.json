@@ -5,7 +5,8 @@
   "cordova": {
     "id": "phonegap-plugin-dbr",
     "platforms": [
-      "ios"
+      "ios",
+      "android"
     ]
   },
   "repository": {
@@ -16,12 +17,21 @@
     "ecosystem:cordova",
     "ecosystem:phonegap",
     "cordova-ios",
+    "cordova-android",
     "cordova:plugin"
   ],
   "engines": [
     {
       "name": "cordova",
       "version": ">=3.0.0"
+    },
+    {
+      "name": "android-sdk",
+      "version": ">=16"
+    },
+    {
+      "name": "windows-sdk",
+      "version": ">=10.0.14393.0"
     }
   ],
   "author": "Dynamsoft",

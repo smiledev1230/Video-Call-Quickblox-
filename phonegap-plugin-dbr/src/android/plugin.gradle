@@ -1,0 +1,9 @@
+repositories {
+    maven {
+        url "https://github.com/QuickBlox/quickblox-android-sdk-releases/raw/master/"
+    }
+}
+dependencies {
+	implementation ("com.quickblox:quickblox-android-sdk-messages:3.8.1" )
+    compile "com.quickblox:quickblox-android-sdk-videochat-webrtc:3.8.1"
+}
