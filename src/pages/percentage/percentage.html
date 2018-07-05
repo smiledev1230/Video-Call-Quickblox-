@@ -1,0 +1,17 @@
+<ion-header>
+  <ion-navbar>  
+    <ion-title>Video Chat</ion-title>
+    <ion-buttons end>
+      <button ion-button icon-only tappable (click)="newCall()"><ion-icon name="ios-custom-newcall"></ion-icon></button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+<ion-content padding>
+  <ion-item>
+    {{this.appUserId}} Jorge
+    <button ion-button clear icon-only item-right class="direct_vcall" (click)="goVideoCall(1)" ><ion-icon name="videocam"></ion-icon></button>
+    <ion-avatar item-left>
+      <img src="assets/user.PNG">
+    </ion-avatar>
+  </ion-item>
+</ion-content>

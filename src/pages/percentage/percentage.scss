@@ -1,0 +1,65 @@
+page-percentage {
+    ion-content{
+        background: url('../assets/bg.png');
+        background-repeat: no-repeat;
+        background-size: 100% 100%;    
+    } 
+    #logo{
+        width: 48%;
+        margin: 10% 26% 0% 26%;
+    }
+    .percentage{
+        text-align: center;
+        margin-top: 20px;
+    }
+    .toolbar-title-ios{
+        font-size: 20px;
+        text-align: center;        
+    }
+    .footer{
+        color: white;
+        position: relative;      
+        z-index: 10;
+        display: block;
+        width: 100%;
+        top: 90%;
+    }
+    #back{
+        height: 37px;
+        margin: 0px 7px;
+    }
+    .goback{
+        position: absolute;
+        margin-top: 10px;
+    }
+    .authenticity{
+        color: white;
+        font-size: 17px;
+    }
+    .username{
+        color: white;
+        font-size: 25px;
+    } 
+    .avatar-image { 
+        height: 150px;
+        width: 150px;
+        border-radius: 50%;
+        position: absolute;
+        top: 0px;
+        left: 0px;
+        bottom: 20px;
+        right: 0px;
+        margin: auto;
+    }
+    #user_photo{       
+        z-index: -999;
+    } 
+    .user_avatar{
+        position: relative;
+        text-align: center;
+        height: 250px;
+    }
+    ion-navbar.toolbar {
+        height: 60px;
+    }
+}

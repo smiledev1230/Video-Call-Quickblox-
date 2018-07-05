@@ -1,0 +1,32 @@
+page-accept {
+    .top{
+        height: 40px;
+        background: #232d41;
+      }
+      .div_content{
+          color: #333;
+          font-size: 16px;
+          height: 35px;
+          padding: 20px;
+      }
+      ion-row ion-col.col{
+          padding: 20px;
+          padding-top: 10px;
+          padding-bottom: 5px;
+      }
+      
+}
+
+ion-modal ion-backdrop{
+    visibility: visible;
+    z-index: 0;
+}
+page-accept.ion-page {
+    top: 20%;
+    width: 80%;
+    max-width: 300px;
+    height: 150px;
+    position: absolute;
+    left: 10%;
+}
+

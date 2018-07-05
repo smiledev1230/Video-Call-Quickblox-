@@ -1,0 +1,135 @@
+page-calling {
+    ion-content.content,
+    .scroll-content{
+        background: #232d41; /* Old browsers */
+        background: -moz-linear-gradient(-45deg, #232d41 0%, #2e3d7d 100%);
+        background: -webkit-linear-gradient(-45deg, #232d41 0%,#2e3d7d 100%);
+        background: linear-gradient(135deg, #232d41 0%,#2e3d7d 100%); 
+        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#232d41', endColorstr='#2e3d7d',GradientType=1 );
+    }
+    h2.name_title{
+        color: #fff;
+        text-align: center;
+        padding-top: 100px;
+        padding-bottom: 10px; 
+    }
+    ion-label.duration{
+        color: #fff;
+        font-size: 16px;
+        text-align: center;
+        margin-bottom: 50px;
+    }
+    div.button_content{
+        max-width: 300px;
+        margin: auto;
+    }
+    ion-row ion-col{
+        text-align: center;
+    }
+    ion-row ion-col ion-label{
+        color: rgba(255,255,255,.3);
+    }
+    div.icon_circle{
+        width: 60px;
+        height: 60px;
+        border: 1px solid rgba(255,255,255,.3);
+        padding: 10px;
+        border-radius: 50px;
+        margin: auto;
+    }
+    div.icon_circle img{
+        width: 60px;
+        height: 60px;
+        margin-left: -10px;
+        margin-top: -10px;
+        max-width: 200%;
+    }
+    div.icon_circle ion-icon,
+    #top ion-icon{
+        color: rgba(255,255,255,1);
+        font-size: 34px;
+    }
+    #top ion-icon{
+        position: absolute;
+        right: 20px;
+        top: 6px;
+    }
+    img.bt_circle{
+        width: 60px;
+        height: 60px;
+    }
+    #preview{
+        max-width: 100px;
+        max-height: 100px;
+        position: absolute;
+        right: 10px;
+        bottom: 100px;
+    }
+    #preview video{
+        max-width: 100%;
+        max-height: 100%;
+        border: 1px solid #fff;
+    }
+
+    #video_content{
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        position: relative;
+    }
+    #remote-media{
+        width: 100%;
+        min-height: 100%;
+    }
+    #remote-media video{
+        width: 100%;
+    }
+    #bottom ion-row{
+        max-width: 300px;
+        margin: auto;
+    }
+    #bottom{
+        position: absolute;
+        width: 100%;
+        bottom: 0;
+        background: rgba(95,107,162, 0.5);
+        padding: 10px 0px;
+    }
+    #top{
+        position: absolute;
+        width: 100%;
+        z-index: 1;
+        background: rgba(129,135,155, 0.8);
+    }
+    img.bt_circle{
+        margin-top: 30px;
+        width: 60px;
+        height: 60px;
+    }
+    #top h2.name_title{
+        padding-top: 15px;
+        padding-bottom: 0px;
+        margin-bottom: 0px;
+    }
+    #top ion-label.duration{
+        margin-top: 5px;
+        margin-bottom: 5px;
+    }
+    #div_video{
+        height: 100%;
+    }
+    .spinner-ios-dots circle{
+        fill: #fff;
+    }
+    .spinner-ios svg, .spinner-ios-small svg {
+        top: 10px;
+        margin-left: 5px;
+    }
+    @media screen and (max-width: 500px){
+      #preview {
+        max-width: 80px;
+        max-height: 80px;
+        bottom: 130px;
+      }
+    }
+}

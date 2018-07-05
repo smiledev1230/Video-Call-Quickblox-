@@ -1,0 +1,43 @@
+<ion-content no-bounce>
+  <div *ngIf="type=='video'" id="div_video">
+      <div id="top">
+          <h2 class='name_title'>{{userName}}</h2>
+          <ion-label class='duration'>{{duration}}<ion-spinner *ngIf="duration == 'Calling'" name="dots"></ion-spinner></ion-label>
+          <ion-icon name='ios-reverse-camera-outline' tappable (click)="reverseCamera()"></ion-icon>
+      </div>
+      <!-- Access local media stream -->
+      <div id="video_content">
+          <div id="remote-media">
+              <div id="video-overlay">
+                  <video id="mainVideo"></video>
+              </div>
+          </div>
+          <div id="preview">
+              <div id="local-media">
+                  <video id="localVideo"></video>
+              </div>
+          </div>
+      </div>
+
+      <div id='bottom'>
+          <ion-row>
+              <ion-col col-4>
+                  <div class='icon_circle' (click)="toggleMute()">
+                      <ion-icon *ngIf="!isMute" name='ios-mic-outline'></ion-icon>
+                      <ion-icon *ngIf="isMute" name='ios-mic-off-outline'></ion-icon>
+                  </div>
+              </ion-col>
+              <ion-col col-4>
+                  <img class='bt_circle' src="assets/end_call.jpg" (click)="endCall(); back()" *ngIf="isEndButton" style="margin-top: 0px;" />
+              </ion-col>
+              <ion-col col-4>
+                  <div class='icon_circle' (click)="toggleVideoMute()">
+                    <ion-icon *ngIf="!isVideoMute" name='ios-videocam-outline'></ion-icon>
+                    <img *ngIf="isVideoMute" src="assets/video_mute.png"/>
+                  </div>
+              </ion-col>
+          </ion-row>
+      </div>
+  </div>
+
+</ion-content>

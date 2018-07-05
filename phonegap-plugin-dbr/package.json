@@ -1,0 +1,30 @@
+{
+  "name": "phonegap-plugin-dbr",
+  "version": "1.0.0",
+  "description": "Dynamsoft Barcode Reader for Cordova iOS",
+  "cordova": {
+    "id": "phonegap-plugin-dbr",
+    "platforms": [
+      "ios"
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dynamsoft-dbr/phonegap-plugin-dbr.git"
+  },
+  "keywords": [
+    "ecosystem:cordova",
+    "ecosystem:phonegap",
+    "cordova-ios",
+    "cordova:plugin"
+  ],
+  "engines": [
+    {
+      "name": "cordova",
+      "version": ">=3.0.0"
+    }
+  ],
+  "author": "Dynamsoft",
+  "license": "MIT",
+  "homepage": "https://github.com/dynamsoft-dbr/phonegap-plugin-dbr"
+}

@@ -1,0 +1,23 @@
+<ion-menu swipeEnabled="false" type="overlay"  id="safe_menu" side="left" persistent="true"[content]="content">
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Menu</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content class="menubar">
+    <ion-list class="menu">
+      <button  ion-item  (click)="openPage('App Setting')">
+        <ion-icon name="ios-person-outline"></ion-icon>
+        &nbsp;&nbsp;App Setting
+      </button>     
+      <button  ion-item   (click)="openPage('Log out')">
+        <ion-icon name="log-out"></ion-icon>
+        &nbsp;&nbsp;Logout
+      </button>  
+    </ion-list>
+  </ion-content>
+</ion-menu>
+
+<!-- Disable swipe-to-go-back because it's poor UX to combine STGB with side menus -->
+<ion-nav [root]="rootPage" #content swipeBackEnabled="false"></ion-nav>
