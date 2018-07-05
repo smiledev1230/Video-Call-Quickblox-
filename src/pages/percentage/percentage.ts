@@ -7,7 +7,6 @@ import { Diagnostic } from '@ionic-native/diagnostic';
 import { Camera, CameraOptions } from '@ionic-native/camera';
 declare var QB;
 declare var cordova;
-@IonicPage()
 @Component({
   selector: 'page-percentage',
   templateUrl: 'percentage.html',

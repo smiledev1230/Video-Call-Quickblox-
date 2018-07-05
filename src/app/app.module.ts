@@ -5,10 +5,11 @@ import { IonicApp, IonicErrorHandler, IonicModule } from 'ionic-angular';
 import { MyApp } from './app.component';
 import { HomePage } from '../pages/home/home';
 import { ListPage } from '../pages/list/list';
-import { ImageComponent } from '../components/image/image';
 import { LoginPage } from '../pages/login/login';
 import { PercentagePage } from '../pages/percentage/percentage';
 import { AcceptPage } from '../pages/accept/accept';
+import { SearchCountPage } from '../pages/search-count/search-count';
+
 import { NgCircleProgressModule } from 'ng-circle-progress';
 
 import { IonicStorageModule } from '@ionic/storage';
@@ -34,7 +35,7 @@ import { Contacts, Contact, ContactField } from '@ionic-native/contacts';
     LoginPage,
     PercentagePage,
     AcceptPage,
-    ImageComponent
+    SearchCountPage
   ],
   imports: [
     BrowserModule,
@@ -58,7 +59,7 @@ import { Contacts, Contact, ContactField } from '@ionic-native/contacts';
     LoginPage,
     PercentagePage,
     AcceptPage,
-    ImageComponent
+    SearchCountPage
   ],
   providers: [
     StatusBar,
