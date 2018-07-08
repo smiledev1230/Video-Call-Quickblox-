@@ -100,6 +100,5 @@
     <plugin name="cordova-plugin-inappbrowser" spec="^2.0.2" />
     <plugin name="cordova-plugin-crop" spec="^0.4.0" />
     <plugin name="phonegap-plugin-barcodescanner" spec="./phonegap-plugin-dbr" />
-    <engine name="android" spec="7.0.0" />
-    <engine name="ios" spec="~4.5.4" />
+    <engine name="android" spec="~7.0.0" />
 </widget>

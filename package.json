@@ -44,24 +44,23 @@
     "angular2-moment": "1.7.0",
     "angularfire2": "4.0.0-rc.1",
     "clean": "4.0.2",
-    "cordova-android": "7.0.0",
     "cordova-base64-to-gallery": "^4.1.3",
     "cordova-opentok-android-permissions": "1.0.1",
-    "cordova-plugin-camera": "^4.0.2",
+    "cordova-plugin-camera": "^4.0.3",
     "cordova-plugin-contacts": "^3.0.1",
     "cordova-plugin-crop": "^0.4.0",
-    "cordova-plugin-device": "^1.1.4",
+    "cordova-plugin-device": "^1.1.7",
     "cordova-plugin-file": "^6.0.1",
     "cordova-plugin-file-transfer": "^1.7.1",
-    "cordova-plugin-filepath": "^1.2.0",
+    "cordova-plugin-filepath": "^1.3.0",
     "cordova-plugin-inappbrowser": "^2.0.2",
-    "cordova-plugin-ionic-keyboard": "^2.0.5",
-    "cordova-plugin-ionic-webview": "^1.1.16",
+    "cordova-plugin-ionic-keyboard": "^2.1.2",
+    "cordova-plugin-ionic-webview": "^1.2.1",
     "cordova-plugin-iosrtc": "4.0.2",
-    "cordova-plugin-splashscreen": "^4.0.3",
-    "cordova-plugin-whitelist": "^1.3.1",
-    "cordova-sqlite-storage": "^2.2.1",
-    "cordova.plugins.diagnostic": "^4.0.5",
+    "cordova-plugin-splashscreen": "^4.1.0",
+    "cordova-plugin-whitelist": "^1.3.3",
+    "cordova-sqlite-storage": "^2.3.3",
+    "cordova.plugins.diagnostic": "^4.0.8",
     "firebase": "^4.12.1",
     "ionic-angular": "3.9.2",
     "ionicons": "3.0.0",
@@ -74,7 +73,7 @@
     "rxjs": "5.5.2",
     "sw-toolbox": "3.6.0",
     "zone.js": "0.8.18",
-    "cordova-ios": "~4.5.4"
+    "cordova-android": "~7.0.0"
   },
   "devDependencies": {
     "@ionic/app-scripts": "3.1.8",
@@ -103,8 +102,7 @@
       "cordova-base64-to-gallery": {}
     },
     "platforms": [
-      "android",
-      "ios"
+      "android"
     ]
   }
 }
